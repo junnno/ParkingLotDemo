@@ -15,11 +15,9 @@ public abstract class ParkingSlot {
     private String slotId;
     private int x;
     private int y;
-
     private int slotSize;
     private boolean isAvailable;
     private boolean isTerminal;
-
     private List<Integer> distances;
 
     public void init(int size, int x, int y, List<Integer> distances) {

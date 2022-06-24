@@ -28,6 +28,7 @@ public class ParkingTicket {
 
     @Column(name = "parkingSlotId")
     String parkingSlotId;
+
     @Column(name = "vehicleType")
     int vehicleType;
 
@@ -36,6 +37,7 @@ public class ParkingTicket {
 
     @Column(name = "amountPaid")
     Double amountPaid;
+
     @Column(name = "timeIn")
     LocalDateTime timeIn;
 
@@ -44,33 +46,36 @@ public class ParkingTicket {
 
 
     public ParkingTicket(String plateNumber, int vehicleType, String parkingSlot,
-                        LocalDateTime timeIn){
+                         LocalDateTime timeIn) {
         this.plateNumber = plateNumber;
         this.vehicleType = vehicleType;
         this.parkingSlotId = parkingSlot;
         this.timeIn = timeIn;
         this.ticketId = "ticketId" + UUID.randomUUID();
     }
+
     public Double checkOut(int multiplier, String dateInput) {
         this.setTimeOut(LocalDateTime.parse(dateInput, ofPattern(DATE_TIME_INPUT_FORMAT)));
         double totalAmount = 0;
-        if(ChronoUnit.MINUTES.between(this.getTimeIn(), this.getTimeOut()) <= FLAT_RATE_MINUTES){
-            totalAmount = FLAT_RATE_FEE;
-        } else {
-            totalAmount = FLAT_RATE_FEE +
-                    Math.ceil(((ChronoUnit.MINUTES.between(this.getTimeIn(),this.getTimeOut())) - FLAT_RATE_MINUTES) / 60D) * multiplier;
-        }
 
+        totalAmount = isWithinFlatRate() ? FLAT_RATE_FEE  : FLAT_RATE_FEE + getExceedingHours() * multiplier;
 
         double balance = totalAmount;
 
-        //subtract paid from total, return balance
-        if(amountPaid != null){
+        if (amountPaid != null) {
             balance = totalAmount - amountPaid;
         }
 
-        amountPaid = totalAmount;
+        this.setAmountPaid(totalAmount);
         return balance;
+    }
+
+    private double getExceedingHours() {
+        return Math.ceil(((ChronoUnit.MINUTES.between(this.getTimeIn(), this.getTimeOut())) - FLAT_RATE_MINUTES) / 60D);
+    }
+
+    private boolean isWithinFlatRate() {
+        return ChronoUnit.MINUTES.between(this.getTimeIn(), this.getTimeOut()) <= FLAT_RATE_MINUTES;
     }
 
 }

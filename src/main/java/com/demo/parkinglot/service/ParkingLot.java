@@ -32,8 +32,10 @@ public class ParkingLot {
 
     @Value("${lot.length}")
     private int length;
+
     @Value("${lot.width}")
     private int width;
+
     @Value("#{'${lot.sizes}'.split(',')}")
     private List<Integer> lotSizesList;
 
@@ -45,6 +47,7 @@ public class ParkingLot {
 
     @Value("#{'${lot.terminalNames}'.split(',')}")
     private List<Integer> terminalNames;
+
     @Autowired
     ParkingTicketRepository parkingTicketRepository;
 
@@ -56,37 +59,39 @@ public class ParkingLot {
     BaseParkingSlotFactory parkingSlotFactory;
 
     List<List<ParkingSlot>> parkingSlots = new ArrayList<>();
+
     private List<List<Integer>> distancesList = new ArrayList<>();
+
     private List<ParkingSlot> terminalsList = new ArrayList<>();
 
     @PostConstruct
-    public void init(){
+    public void init() {
         clearLot();
         initializeDistances();
         initializeParkingSlots();
     }
 
     private void initializeParkingSlots() {
-        for(int x=0, index = 0;x<length;x++) {
+        for (int x = 0, index = 0; x < length; x++) {
             List<ParkingSlot> slotList = new ArrayList<>();
-            for(int y=0;y<width;y++){
+            for (int y = 0; y < width; y++) {
                 ParkingSlot slot = parkingSlotFactory.createParkingSlot(
-                        lotSizesList.get(index), y ,x, distancesList.get(index));
-                if(slot.isTerminal()) terminalsList.add(slot);
+                        lotSizesList.get(index), y, x, distancesList.get(index));
+                if (slot.isTerminal()) terminalsList.add(slot);
                 index++;
                 slotList.add(slot);
             }
             parkingSlots.add(slotList);
-            if(index == lotSizesList.size()) break;
+            if (index == lotSizesList.size()) break;
         }
     }
 
     private void initializeDistances() {
         distancesList = distancesPropertyString.stream()
                 .map(distance -> Arrays.stream(distance.split(","))
-                    .mapToInt(Integer::parseInt)
-                    .boxed()
-                    .collect(Collectors.toList())
+                        .mapToInt(Integer::parseInt)
+                        .boxed()
+                        .collect(Collectors.toList())
                 ).collect(Collectors.toList());
     }
 
@@ -94,16 +99,16 @@ public class ParkingLot {
         parkingSlots = new ArrayList<>();
     }
 
-    public void printLot(){
+    public void printLot() {
         parkingSlots.forEach(slotList ->
-            slotList.forEach(slot ->
-                System.out.print(
-                " size:" + slot.getSlotSize()
-                + " [" + slot.getX() + ","
-                + slot.getY() + "]"
-                + " [" + slot.isAvailable() + "]"
-                + " \t")
-            )
+                slotList.forEach(slot ->
+                        System.out.print(
+                                " size:" + slot.getSlotSize()
+                                        + " [" + slot.getX() + ","
+                                        + slot.getY() + "]"
+                                        + " [" + slot.isAvailable() + "]"
+                                        + " \t")
+                )
         );
     }
 
@@ -112,9 +117,9 @@ public class ParkingLot {
 
         ParkingSlot parkingSlot = strategy.assignParkingSlot(parkingSlots, vehicleType, terminalNumber);
         LocalDateTime timeIn = LocalDateTime.parse(entryDateTime, ofPattern(DATE_TIME_INPUT_FORMAT));
-        ParkingTicket ticket =  parkingTicketRepository.findByPlateNumberAndTimeOutGreaterThan(plateNumber, timeIn.minusHours(CONTINUITY_LIMIT_HOURS));
+        ParkingTicket ticket = parkingTicketRepository.findByPlateNumberAndTimeOutGreaterThan(plateNumber, timeIn.minusHours(CONTINUITY_LIMIT_HOURS));
 
-        if(ticket != null){
+        if (ticket != null) {
             if (isVehicleParked(ticket)) throw new InvalidParkingException();
             ticket.setTimeOut(null);
         } else {
@@ -127,8 +132,8 @@ public class ParkingLot {
     }
 
     private void validateInput(int vehicleType, int terminalNumber) throws InvalidVehicleTypeException, TerminalNotFoundException {
-        if(!vehicleTypes.contains(vehicleType)) throw new InvalidVehicleTypeException();
-        if(!terminalNames.contains(terminalNumber)) throw new TerminalNotFoundException();
+        if (!vehicleTypes.contains(vehicleType)) throw new InvalidVehicleTypeException();
+        if (!terminalNames.contains(terminalNumber)) throw new TerminalNotFoundException();
     }
 
     private boolean isVehicleParked(ParkingTicket ticket) {
@@ -136,9 +141,9 @@ public class ParkingLot {
     }
 
     public ParkingSlot getParkingSlotById(String id) throws ParkingSlotNotFoundException {
-        for(int i=0; i<length; i++){
-            for(int j=0; j<width; j++){
-                if(id.equalsIgnoreCase(parkingSlots.get(i).get(j).getSlotId())) return parkingSlots.get(i).get(j);
+        for (int i = 0; i < length; i++) {
+            for (int j = 0; j < width; j++) {
+                if (id.equalsIgnoreCase(parkingSlots.get(i).get(j).getSlotId())) return parkingSlots.get(i).get(j);
             }
         }
         throw new ParkingSlotNotFoundException();
@@ -146,7 +151,7 @@ public class ParkingLot {
 
     public Double unpark(String ticketId, String exitDateTime) throws ParkingSlotNotFoundException, InvalidTicketException {
         Optional<ParkingTicket> parkingTicket = parkingTicketRepository.findById(ticketId);
-        if(parkingTicket.isEmpty()) throw new InvalidTicketException();
+        if (parkingTicket.isEmpty()) throw new InvalidTicketException();
 
         ParkingTicket ticket = parkingTicket.get();
         String parkingSlotId = ticket.getParkingSlotId();
