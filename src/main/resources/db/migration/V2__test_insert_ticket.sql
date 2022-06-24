@@ -1,0 +1,1 @@
+insert into TICKET (ticket_id,parking_slot_id,plate_number,time_in,time_out,vehicle_type,amount_paid) values ('1','1','AAA',null,null,1,0);
