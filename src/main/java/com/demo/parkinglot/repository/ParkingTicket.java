@@ -4,15 +4,14 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
-import static com.demo.parkinglot.ParkingLotStatics.*;
+import static com.demo.parkinglot.util.ParkingLotStatics.*;
+import static com.demo.parkinglot.util.ParkingLotStatics.FLAT_RATE_MINUTES;
+import static com.demo.parkinglot.util.ParkingLotUtil.*;
 import static java.time.format.DateTimeFormatter.ofPattern;
 
 @Getter
@@ -20,7 +19,7 @@ import static java.time.format.DateTimeFormatter.ofPattern;
 @Entity
 @NoArgsConstructor
 @Table(name = "ticket")
-public class ParkingTicket {
+public class ParkingTicket implements FeeCalculator{
 
     @Id
     @Column(name = "ticketId")
@@ -54,11 +53,27 @@ public class ParkingTicket {
         this.ticketId = "ticketId" + UUID.randomUUID();
     }
 
-    public Double checkOut(int multiplier, String dateInput) {
+    public Double checkOut(int vehicleTypeFee, String dateInput) {
         this.setTimeOut(LocalDateTime.parse(dateInput, ofPattern(DATE_TIME_INPUT_FORMAT)));
-        double totalAmount = 0;
+        return this.computeTotal(this, vehicleTypeFee);
+    }
 
-        totalAmount = isWithinFlatRate() ? FLAT_RATE_FEE  : FLAT_RATE_FEE + getExceedingHours() * multiplier;
+    @Override
+    public double computeTotal(ParkingTicket ticket, int vehicleTypeFee) {
+        double totalAmount = 0;
+        double totalTimeMinutes = ChronoUnit.MINUTES.between(timeIn, timeOut);
+        double totalTimeDays = Math.floor(ChronoUnit.DAYS.between(timeIn, timeOut));
+
+        double exceedingHoursFee = 0;
+
+        if(totalTimeDays>=1) {
+            exceedingHoursFee = getExceedingHours(totalTimeMinutes , totalTimeDays * DAY_IN_MINUTES, vehicleTypeFee);
+        } else {
+            exceedingHoursFee = isWithinFlatRate(timeIn, timeOut) ? FLAT_RATE_FEE  :
+                    FLAT_RATE_FEE + getExceedingHours(totalTimeMinutes, FLAT_RATE_MINUTES, vehicleTypeFee);
+        }
+
+        totalAmount = exceedingHoursFee + getDailyPenaltyFee(totalTimeDays);
 
         double balance = totalAmount;
 
@@ -70,12 +85,5 @@ public class ParkingTicket {
         return balance;
     }
 
-    private double getExceedingHours() {
-        return Math.ceil(((ChronoUnit.MINUTES.between(this.getTimeIn(), this.getTimeOut())) - FLAT_RATE_MINUTES) / 60D);
-    }
-
-    private boolean isWithinFlatRate() {
-        return ChronoUnit.MINUTES.between(this.getTimeIn(), this.getTimeOut()) <= FLAT_RATE_MINUTES;
-    }
 
 }

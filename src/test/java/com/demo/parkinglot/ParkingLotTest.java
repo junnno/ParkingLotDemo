@@ -50,6 +50,24 @@ public class ParkingLotTest {
 
     @Test
     @Transactional
+    public void shouldPayPenalty_givenCarParkedFor26Hours() throws RuntimeException {
+        String timeIn = "06/24/2022 15:30:00";
+        ParkingTicket ticket = lot.park("AAA333",0, 1, timeIn);
+        Double amount = lot.unpark(ticket.getTicketId(),"06/25/2022 17:30:00");
+        assertEquals(5120D, amount);
+    }
+
+    @Test
+    @Transactional
+    public void shouldPayPenalty_givenCarParkedFor26AndHalfHours() throws RuntimeException {
+        String timeIn = "06/24/2022 15:30:00";
+        ParkingTicket ticket = lot.park("AAA333",0, 1, timeIn);
+        Double amount = lot.unpark(ticket.getTicketId(),"06/25/2022 18:00:00");
+        assertEquals(5180D, amount);
+    }
+
+    @Test
+    @Transactional
     public void shouldFreeUpLargeParkingSpot_givenVehicleIsUnparked() throws RuntimeException {
         String timeIn = "06/19/2022 21:30:00";
         lot.park("AAA221",2, 1, timeIn);

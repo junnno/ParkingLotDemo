@@ -21,8 +21,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static com.demo.parkinglot.ParkingLotStatics.CONTINUITY_LIMIT_HOURS;
-import static com.demo.parkinglot.ParkingLotStatics.DATE_TIME_INPUT_FORMAT;
+import static com.demo.parkinglot.util.ParkingLotStatics.CONTINUITY_LIMIT_HOURS;
+import static com.demo.parkinglot.util.ParkingLotStatics.DATE_TIME_INPUT_FORMAT;
 import static java.time.format.DateTimeFormatter.ofPattern;
 
 @Getter
